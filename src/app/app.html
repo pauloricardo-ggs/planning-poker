@@ -1,1 +1,106 @@
-<router-outlet />
+<div
+  class="app-shell"
+  (contextmenu)="onContextMenu($event)"
+  (window:click)="onWindowClick()"
+  (window:keydown)="onWindowKeydown($event)"
+>
+  <router-outlet />
+
+  @if (contextMenuOpen()) {
+    <div
+      class="context-menu"
+      role="menu"
+      [style.left.px]="contextMenuPosition().x"
+      [style.top.px]="contextMenuPosition().y"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        class="menu-row"
+        [class.menu-row--open]="emoteSubmenuOpen()"
+        (mouseenter)="onEmoteMenuEnter()"
+        (mouseleave)="onEmoteMenuLeave()"
+      >
+        <button type="button" role="menuitem">Emote <span aria-hidden="true">›</span></button>
+
+        @if (emoteSubmenuOpen()) {
+          <div class="context-submenu" role="menu" (click)="$event.stopPropagation()">
+            @for (option of emoteOptions; track option.label) {
+              <button type="button" role="menuitem" (click)="triggerReactionAtMenuPosition(option)">
+                {{ option.emoji }} {{ option.label }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      @if (contextParticipant(); as participant) {
+        <div
+          class="menu-row"
+          [class.menu-row--open]="participantSubmenuOpen()"
+          (mouseenter)="onParticipantMenuEnter()"
+          (mouseleave)="onParticipantMenuLeave()"
+        >
+          <button type="button" role="menuitem">
+            {{ participant.name }} <span aria-hidden="true">›</span>
+          </button>
+
+          @if (participantSubmenuOpen()) {
+            <div class="context-submenu" role="menu" (click)="$event.stopPropagation()">
+              @for (option of participantMenuOptions; track option.label) {
+                <button type="button" role="menuitem" (click)="triggerParticipantAction(option)">
+                  {{ option.emoji }} {{ option.label }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <div class="firecracker-layer" aria-hidden="true">
+    @for (burst of bursts(); track burst.id) {
+      <div class="firecracker-burst" [style.left.px]="burst.x" [style.top.px]="burst.y">
+        @for (particle of burst.particles; track particle.id) {
+          <span
+            class="particle"
+            [style.--tx.px]="particle.dx"
+            [style.--ty.px]="particle.dy"
+            [style.--hue]="particle.hue"
+            [style.--duration.ms]="particle.durationMs"
+          ></span>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="emote-layer" aria-hidden="true">
+    @for (emote of emoteBursts(); track emote.id) {
+      <span class="emote-burst" [style.left.px]="emote.x" [style.top.px]="emote.y">
+        {{ emote.emoji }}
+      </span>
+    }
+  </div>
+
+  <div class="fun-effect-layer" aria-hidden="true">
+    @for (effect of funEffectBursts(); track effect.id) {
+      <span
+        class="fun-effect"
+        [class.fun-effect--rock]="effect.type === 'rock'"
+        [class.fun-effect--coffee]="effect.type === 'coffee'"
+        [style.left.px]="effect.x"
+        [style.top.px]="effect.y"
+        [style.--rock-target-x.px]="effect.type === 'rock' ? effect.targetX - effect.x : null"
+        [style.--rock-target-y.px]="effect.type === 'rock' ? effect.targetY - effect.y : null"
+      >
+        {{ effect.type === 'rock' ? '🪨' : '☕' }}
+
+        @if (effect.type === 'coffee') {
+          <span class="coffee-drip coffee-drip--one"></span>
+          <span class="coffee-drip coffee-drip--two"></span>
+          <span class="coffee-drip coffee-drip--three"></span>
+        }
+      </span>
+    }
+  </div>
+</div>

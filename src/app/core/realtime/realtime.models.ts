@@ -24,6 +24,39 @@ export interface ParticipantActionPayload {
   participantId: string;
 }
 
+export interface CursorMovePayload {
+  x: number;
+  y: number;
+}
+
+export interface RemoteCursor {
+  participantId: string;
+  name: string;
+  x: number;
+  y: number;
+}
+
+export interface FirecrackerPayload {
+  x: number;
+  y: number;
+}
+
+export interface EmotePayload {
+  emoji: string;
+  x: number;
+  y: number;
+}
+
+export type FunEffectType = 'rock' | 'coffee';
+
+export interface FunEffectPayload {
+  type: FunEffectType;
+  x: number;
+  y: number;
+  targetX?: number;
+  targetY?: number;
+}
+
 export type SocketAck<TPayload extends object = Record<string, never>> =
   | ({ ok: true } & TPayload)
   | { ok: false; message: string };

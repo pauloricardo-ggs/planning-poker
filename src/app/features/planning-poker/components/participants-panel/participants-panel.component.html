@@ -8,6 +8,8 @@
     @for (participant of participants(); track participant.id) {
       <li
         class="participant"
+        [attr.data-participant-id]="participant.id"
+        [attr.data-participant-name]="participant.name"
         [class.participant--active]="participant.id === activeParticipantId()"
       >
         <button type="button" class="participant__identity" (click)="activate(participant.id)">
@@ -28,7 +30,7 @@
             <button
               type="button"
               (click)="clearVote(participant.id)"
-              [disabled]="participant.vote === null"
+              [disabled]="participant.vote === null || revealVotes()"
             >
               Clear
             </button>

@@ -1,4 +1,5 @@
 .page {
+  position: relative;
   max-width: 1100px;
   margin: 0 auto;
   padding: 2rem 1rem 2.5rem;
@@ -169,12 +170,49 @@ h1 {
 }
 
 .table {
+  position: relative;
   background: var(--surface-default);
   border: 1px solid var(--surface-border);
   border-radius: 1rem;
   padding: 1rem;
   display: grid;
   gap: 1rem;
+}
+
+.cursor-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cursor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cursor__dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--accent-color);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--background-color), transparent 40%);
+}
+
+.cursor__name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  background: color-mix(in oklab, var(--surface-default), transparent 15%);
+  border: 1px solid var(--surface-border);
+  color: var(--text-primary);
+  border-radius: 0.45rem;
+  padding: 0.2rem 0.35rem;
+  white-space: nowrap;
 }
 
 .table__controls {

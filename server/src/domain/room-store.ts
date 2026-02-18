@@ -99,6 +99,10 @@ export class RoomStore {
 
   setVote(socketId: string, card: PlanningCard): RoomSnapshot {
     const room = this.getRoomBySocket(socketId);
+    if (room.revealVotes) {
+      throw new Error('Votes are locked after reveal. Start a new round to vote again.');
+    }
+
     const participant = room.participants.get(socketId);
 
     if (!participant) {
@@ -111,6 +115,10 @@ export class RoomStore {
 
   clearVote(socketId: string, participantId: string): RoomSnapshot {
     const room = this.getRoomBySocket(socketId);
+    if (room.revealVotes) {
+      throw new Error('Votes are locked after reveal. Start a new round to clear votes.');
+    }
+
     const canClear = socketId === participantId || room.hostId === socketId;
     if (!canClear) {
       throw new Error('Not allowed to clear this vote.');

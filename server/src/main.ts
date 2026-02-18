@@ -30,6 +30,102 @@ function emitRoomState(roomCode: string): void {
 }
 
 io.on('connection', (socket) => {
+  socket.on(
+    'fun:effect',
+    (payload: {
+      type: 'rock' | 'coffee';
+      x: number;
+      y: number;
+      targetX?: number;
+      targetY?: number;
+    }) => {
+      try {
+        const roomCode = roomStore.getRoomCodeForSocket(socket.id);
+        if (!roomCode) {
+          return;
+        }
+
+        if (payload.type !== 'rock' && payload.type !== 'coffee') {
+          return;
+        }
+
+        const x = Math.min(Math.max(payload.x, 0), 1);
+        const y = Math.min(Math.max(payload.y, 0), 1);
+        const targetX =
+          typeof payload.targetX === 'number'
+            ? Math.min(Math.max(payload.targetX, 0), 1)
+            : undefined;
+        const targetY =
+          typeof payload.targetY === 'number'
+            ? Math.min(Math.max(payload.targetY, 0), 1)
+            : undefined;
+
+        io.to(roomCode).emit('fun:effect', { type: payload.type, x, y, targetX, targetY });
+      } catch {
+        return;
+      }
+    },
+  );
+
+  socket.on('fun:emote', (payload: { emoji: string; x: number; y: number }) => {
+    try {
+      const roomCode = roomStore.getRoomCodeForSocket(socket.id);
+      if (!roomCode) {
+        return;
+      }
+
+      const x = Math.min(Math.max(payload.x, 0), 1);
+      const y = Math.min(Math.max(payload.y, 0), 1);
+      const emoji = payload.emoji.slice(0, 4);
+
+      io.to(roomCode).emit('fun:emote', { emoji, x, y });
+    } catch {
+      return;
+    }
+  });
+
+  socket.on('fun:firecracker', (payload: { x: number; y: number }) => {
+    try {
+      const roomCode = roomStore.getRoomCodeForSocket(socket.id);
+      if (!roomCode) {
+        return;
+      }
+
+      const x = Math.min(Math.max(payload.x, 0), 1);
+      const y = Math.min(Math.max(payload.y, 0), 1);
+      io.to(roomCode).emit('fun:firecracker', { x, y });
+    } catch {
+      return;
+    }
+  });
+
+  socket.on('cursor:move', (payload: { x: number; y: number }) => {
+    try {
+      const roomCode = roomStore.getRoomCodeForSocket(socket.id);
+      if (!roomCode) {
+        return;
+      }
+
+      const snapshot = roomStore.getSnapshot(roomCode);
+      const participant = snapshot.participants.find((candidate) => candidate.id === socket.id);
+      if (!participant) {
+        return;
+      }
+
+      const x = Math.min(Math.max(payload.x, 0), 1);
+      const y = Math.min(Math.max(payload.y, 0), 1);
+
+      socket.to(roomCode).emit('cursor:update', {
+        participantId: socket.id,
+        name: participant.name,
+        x,
+        y,
+      });
+    } catch {
+      return;
+    }
+  });
+
   socket.on('room:create', (payload: { name: string }, ack?: (response: unknown) => void) => {
     try {
       const snapshot = roomStore.createRoom(socket.id, payload.name);
@@ -118,6 +214,7 @@ io.on('connection', (socket) => {
     const snapshot = roomStore.leaveRoom(socket.id);
     if (roomCode) {
       socket.leave(roomCode);
+      socket.to(roomCode).emit('cursor:leave', { participantId: socket.id });
     }
 
     ack?.({ ok: true });
@@ -128,7 +225,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
+    const roomCode = roomStore.getRoomCodeForSocket(socket.id);
     const snapshot = roomStore.leaveRoom(socket.id);
+    if (roomCode) {
+      socket.to(roomCode).emit('cursor:leave', { participantId: socket.id });
+    }
     if (snapshot) {
       emitRoomState(snapshot.roomCode);
     }

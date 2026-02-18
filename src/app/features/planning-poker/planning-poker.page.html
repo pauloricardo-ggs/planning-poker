@@ -1,7 +1,7 @@
-<main class="page">
+<main class="page" (window:pointermove)="onViewportPointerMove($event)">
   <header class="page__header">
     <div>
-      <p class="eyebrow">Angular 21 + Signals</p>
+      <p class="eyebrow">ma9 Poker</p>
       <h1>Planning Poker</h1>
       <p class="subtitle">Fast estimation sessions with clean state management.</p>
 
@@ -122,11 +122,20 @@
           <button
             type="button"
             (click)="sessionStore.toggleRevealVotes()"
-            [disabled]="sessionStore.votedCount() === 0"
+            [disabled]="
+              sessionStore.votedCount() === 0 ||
+              (sessionStore.mode() === 'multiplayer' && !sessionStore.isHost())
+            "
           >
             {{ sessionStore.revealVotes() ? 'Hide votes' : 'Reveal votes' }}
           </button>
-          <button type="button" (click)="sessionStore.clearRound()">New round</button>
+          <button
+            type="button"
+            (click)="sessionStore.clearRound()"
+            [disabled]="sessionStore.mode() === 'multiplayer' && !sessionStore.isHost()"
+          >
+            New round
+          </button>
         </div>
       </div>
 
@@ -139,7 +148,7 @@
           )?.vote ?? null
         "
         [disabled]="
-          sessionStore.mode() === 'multiplayer'
+          sessionStore.revealVotes() || sessionStore.mode() === 'multiplayer'
             ? !sessionStore.myParticipant()
             : !sessionStore.activeParticipant()
         "
@@ -147,4 +156,15 @@
       />
     </section>
   </section>
+
+  @if (sessionStore.inRoom()) {
+    <div class="cursor-layer" aria-hidden="true">
+      @for (cursor of sessionStore.remoteCursors(); track cursor.participantId) {
+        <div class="cursor" [style.left.%]="cursor.x * 100" [style.top.%]="cursor.y * 100">
+          <span class="cursor__dot"></span>
+          <span class="cursor__name">{{ cursor.name }}</span>
+        </div>
+      }
+    </div>
+  }
 </main>

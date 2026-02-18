@@ -23,6 +23,59 @@ function emitRoomState(roomCode) {
     io.to(roomCode).emit('room:state', snapshot);
 }
 io.on('connection', (socket) => {
+    socket.on('fun:emote', (payload) => {
+        try {
+            const roomCode = roomStore.getRoomCodeForSocket(socket.id);
+            if (!roomCode) {
+                return;
+            }
+            const x = Math.min(Math.max(payload.x, 0), 1);
+            const y = Math.min(Math.max(payload.y, 0), 1);
+            const emoji = payload.emoji.slice(0, 4);
+            io.to(roomCode).emit('fun:emote', { emoji, x, y });
+        }
+        catch {
+            return;
+        }
+    });
+    socket.on('fun:firecracker', (payload) => {
+        try {
+            const roomCode = roomStore.getRoomCodeForSocket(socket.id);
+            if (!roomCode) {
+                return;
+            }
+            const x = Math.min(Math.max(payload.x, 0), 1);
+            const y = Math.min(Math.max(payload.y, 0), 1);
+            io.to(roomCode).emit('fun:firecracker', { x, y });
+        }
+        catch {
+            return;
+        }
+    });
+    socket.on('cursor:move', (payload) => {
+        try {
+            const roomCode = roomStore.getRoomCodeForSocket(socket.id);
+            if (!roomCode) {
+                return;
+            }
+            const snapshot = roomStore.getSnapshot(roomCode);
+            const participant = snapshot.participants.find((candidate) => candidate.id === socket.id);
+            if (!participant) {
+                return;
+            }
+            const x = Math.min(Math.max(payload.x, 0), 1);
+            const y = Math.min(Math.max(payload.y, 0), 1);
+            socket.to(roomCode).emit('cursor:update', {
+                participantId: socket.id,
+                name: participant.name,
+                x,
+                y,
+            });
+        }
+        catch {
+            return;
+        }
+    });
     socket.on('room:create', (payload, ack) => {
         try {
             const snapshot = roomStore.createRoom(socket.id, payload.name);
@@ -102,6 +155,7 @@ io.on('connection', (socket) => {
         const snapshot = roomStore.leaveRoom(socket.id);
         if (roomCode) {
             socket.leave(roomCode);
+            socket.to(roomCode).emit('cursor:leave', { participantId: socket.id });
         }
         ack?.({ ok: true });
         if (snapshot) {
@@ -109,7 +163,11 @@ io.on('connection', (socket) => {
         }
     });
     socket.on('disconnect', () => {
+        const roomCode = roomStore.getRoomCodeForSocket(socket.id);
         const snapshot = roomStore.leaveRoom(socket.id);
+        if (roomCode) {
+            socket.to(roomCode).emit('cursor:leave', { participantId: socket.id });
+        }
         if (snapshot) {
             emitRoomState(snapshot.roomCode);
         }
