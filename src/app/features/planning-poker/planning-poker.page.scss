@@ -1,0 +1,211 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem 2.5rem;
+  display: grid;
+  gap: 1.2rem;
+}
+
+.page__header {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  background: var(--surface-default);
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  padding: 1.2rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+h1 {
+  margin: 0.25rem 0;
+  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.2rem);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.room-status {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.room-status p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.room-status strong {
+  color: var(--text-primary);
+}
+
+.error {
+  margin: 0.7rem 0 0;
+  color: var(--danger-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.connection-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.multiplayer {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.multiplayer label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.multiplayer input {
+  border-radius: 0.65rem;
+  border: 1px solid var(--surface-border);
+  min-height: 2.55rem;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  padding: 0 0.8rem;
+}
+
+.actions,
+.join-room {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.add-participant {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.add-participant label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.add-participant div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.55rem;
+}
+
+.add-participant input,
+.multiplayer button,
+.add-participant button,
+.table__controls button {
+  border-radius: 0.65rem;
+  border: 1px solid var(--surface-border);
+  min-height: 2.55rem;
+  font: inherit;
+}
+
+.add-participant input {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  padding: 0 0.8rem;
+}
+
+.add-participant button,
+.table__controls button {
+  background: color-mix(in oklab, var(--accent-color), black 10%);
+  border-color: transparent;
+  color: white;
+  font-weight: 600;
+  padding: 0 0.85rem;
+  cursor: pointer;
+}
+
+.multiplayer button {
+  background: color-mix(in oklab, var(--accent-color), black 10%);
+  border-color: transparent;
+  color: white;
+  font-weight: 600;
+  padding: 0 0.85rem;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.multiplayer button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.add-participant button:disabled,
+.table__controls button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.secondary {
+  background: transparent;
+  border-color: var(--surface-border);
+  color: var(--text-secondary);
+}
+
+.workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.table {
+  background: var(--surface-default);
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.table__controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.table__controls p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.table__controls strong {
+  color: var(--text-primary);
+}
+
+.table__controls div {
+  display: flex;
+  gap: 0.55rem;
+}
+
+@media (min-width: 900px) {
+  .page__header {
+    grid-template-columns: 1.25fr minmax(18rem, 0.75fr);
+    align-items: center;
+  }
+
+  .workspace {
+    grid-template-columns: minmax(16rem, 19rem) 1fr;
+  }
+}

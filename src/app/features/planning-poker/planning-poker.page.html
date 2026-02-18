@@ -1,0 +1,150 @@
+<main class="page">
+  <header class="page__header">
+    <div>
+      <p class="eyebrow">Angular 21 + Signals</p>
+      <h1>Planning Poker</h1>
+      <p class="subtitle">Fast estimation sessions with clean state management.</p>
+
+      <div class="room-status">
+        <p>
+          Mode:
+          <strong>{{ sessionStore.mode() === 'multiplayer' ? 'Multiplayer' : 'Local' }}</strong>
+        </p>
+        @if (sessionStore.inRoom()) {
+          <p>
+            Room: <strong>{{ sessionStore.roomCode() }}</strong>
+          </p>
+          <p>
+            Role: <strong>{{ sessionStore.isHost() ? 'Host' : 'Participant' }}</strong>
+          </p>
+        }
+      </div>
+
+      @if (sessionStore.connectionError()) {
+        <p class="error">{{ sessionStore.connectionError() }}</p>
+      }
+    </div>
+
+    <section class="connection-panel" aria-label="Multiplayer controls">
+      <div class="multiplayer">
+        <label for="display-name">Your name (used for Create and Join)</label>
+        <input
+          id="display-name"
+          type="text"
+          [formControl]="displayNameControl"
+          maxlength="32"
+          placeholder="Your display name"
+        />
+
+        @if (!sessionStore.inRoom()) {
+          <label for="room-code">Room code (for Join)</label>
+          <input
+            id="room-code"
+            type="text"
+            [formControl]="roomCodeControl"
+            maxlength="6"
+            placeholder="ABC123"
+          />
+
+          <div class="actions">
+            <button
+              type="button"
+              (click)="createRoom()"
+              [disabled]="displayNameControl.value.trim().length === 0"
+            >
+              Create room
+            </button>
+            <button
+              type="button"
+              (click)="joinRoom()"
+              [disabled]="
+                displayNameControl.value.trim().length === 0 ||
+                roomCodeControl.value.trim().length < 6
+              "
+            >
+              Join
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (sessionStore.inRoom()) {
+        <button type="button" class="secondary" (click)="leaveRoom()">Leave room</button>
+      }
+    </section>
+  </header>
+
+  @if (!sessionStore.inRoom()) {
+    <form class="add-participant" (submit)="$event.preventDefault(); addParticipant()">
+      <label for="participant-name">Add local participant</label>
+      <div>
+        <input
+          id="participant-name"
+          type="text"
+          [formControl]="participantNameControl"
+          maxlength="32"
+          placeholder="Name"
+        />
+        <button type="submit" [disabled]="participantNameControl.invalid">Add</button>
+      </div>
+    </form>
+  }
+
+  <app-session-summary
+    [totalParticipants]="sessionStore.totalParticipants()"
+    [votedCount]="sessionStore.votedCount()"
+    [average]="sessionStore.average()"
+    [consensus]="sessionStore.consensus()"
+    [revealVotes]="sessionStore.revealVotes()"
+  />
+
+  <section class="workspace">
+    <app-participants-panel
+      [participants]="sessionStore.participants()"
+      [activeParticipantId]="sessionStore.activeParticipantId()"
+      [revealVotes]="sessionStore.revealVotes()"
+      [selfParticipantId]="sessionStore.selfParticipantId()"
+      [isHost]="sessionStore.isHost()"
+      [activeSelectable]="sessionStore.mode() === 'local'"
+      (activeChanged)="sessionStore.setActiveParticipant($event)"
+      (participantRemoved)="sessionStore.removeParticipant($event)"
+      (voteCleared)="sessionStore.clearVote($event)"
+    />
+
+    <section class="table" aria-label="Voting table">
+      <div class="table__controls">
+        <p>
+          Active participant:
+          <strong>{{ sessionStore.activeParticipant()?.name ?? 'None selected' }}</strong>
+        </p>
+
+        <div>
+          <button
+            type="button"
+            (click)="sessionStore.toggleRevealVotes()"
+            [disabled]="sessionStore.votedCount() === 0"
+          >
+            {{ sessionStore.revealVotes() ? 'Hide votes' : 'Reveal votes' }}
+          </button>
+          <button type="button" (click)="sessionStore.clearRound()">New round</button>
+        </div>
+      </div>
+
+      <app-card-deck
+        [cards]="sessionStore.deck()"
+        [selectedCard]="
+          (sessionStore.mode() === 'multiplayer'
+            ? sessionStore.myParticipant()
+            : sessionStore.activeParticipant()
+          )?.vote ?? null
+        "
+        [disabled]="
+          sessionStore.mode() === 'multiplayer'
+            ? !sessionStore.myParticipant()
+            : !sessionStore.activeParticipant()
+        "
+        (cardSelected)="vote($event)"
+      />
+    </section>
+  </section>
+</main>

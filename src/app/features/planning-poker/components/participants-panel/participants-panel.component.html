@@ -1,0 +1,44 @@
+<section class="panel" aria-label="Participants">
+  <header class="panel__header">
+    <h2>Participants</h2>
+    <p>{{ participants().length }} in session</p>
+  </header>
+
+  <ul class="participants">
+    @for (participant of participants(); track participant.id) {
+      <li
+        class="participant"
+        [class.participant--active]="participant.id === activeParticipantId()"
+      >
+        <button type="button" class="participant__identity" (click)="activate(participant.id)">
+          <span class="participant__name">{{ participant.name }}</span>
+          <span class="participant__vote">
+            @if (participant.vote === null) {
+              —
+            } @else if (revealVotes()) {
+              {{ participant.vote }}
+            } @else {
+              ●
+            }
+          </span>
+        </button>
+
+        <div class="participant__actions">
+          @if (participant.id === selfParticipantId() || isHost()) {
+            <button
+              type="button"
+              (click)="clearVote(participant.id)"
+              [disabled]="participant.vote === null"
+            >
+              Clear
+            </button>
+          }
+
+          @if (isHost() && participant.id !== selfParticipantId()) {
+            <button type="button" class="danger" (click)="remove(participant.id)">Remove</button>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+</section>

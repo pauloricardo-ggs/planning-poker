@@ -1,0 +1,13 @@
+<section class="deck" aria-label="Planning card deck">
+  @for (card of cards(); track card) {
+    <button
+      type="button"
+      class="card"
+      [class.card--selected]="selectedCard() === card"
+      [disabled]="disabled()"
+      (click)="selectCard(card)"
+    >
+      {{ card }}
+    </button>
+  }
+</section>

@@ -1,0 +1,21 @@
+<section class="summary" aria-label="Session metrics">
+  <article class="summary__item">
+    <p>Participants</p>
+    <strong>{{ totalParticipants() }}</strong>
+  </article>
+
+  <article class="summary__item">
+    <p>Votes cast</p>
+    <strong>{{ votedCount() }}/{{ totalParticipants() }}</strong>
+  </article>
+
+  <article class="summary__item">
+    <p>Average</p>
+    <strong>{{ revealVotes() ? average() : 'Hidden' }}</strong>
+  </article>
+
+  <article class="summary__item">
+    <p>Consensus</p>
+    <strong>{{ revealVotes() ? (consensus() ? 'Yes' : 'No') : 'Hidden' }}</strong>
+  </article>
+</section>

@@ -1,0 +1,38 @@
+.deck {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+  gap: 0.75rem;
+}
+
+.card {
+  appearance: none;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.9rem;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 1.15rem;
+  min-height: 4.5rem;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--accent-color);
+  box-shadow: 0 12px 26px -20px color-mix(in oklab, var(--accent-color), transparent 35%);
+}
+
+.card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.card--selected {
+  border-color: var(--accent-color);
+  box-shadow: 0 12px 26px -20px color-mix(in oklab, var(--accent-color), transparent 5%);
+  color: var(--accent-color);
+}
