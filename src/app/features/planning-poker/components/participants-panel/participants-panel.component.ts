@@ -18,8 +18,8 @@ export class ParticipantsPanelComponent {
   readonly isHost = input(false);
   readonly activeSelectable = input(true);
 
-  readonly quickEmotes = ['🧻', '✈️', '🎯', '☕'] as const;
-  readonly customEmotes = ['👍', '🌧️', '🚀', '✨', '😄', '🤝', '🔥'] as const;
+  readonly quickEmotes = ['🧻', '🪨', '🎯', '☕'] as const;
+  readonly customEmotes = ['✈️', '👍', '🌧️', '🚀', '✨', '😄', '🤝', '🔥'] as const;
   readonly customEmoteOpenId = signal<string | null>(null);
 
   readonly activeChanged = output<string>();
