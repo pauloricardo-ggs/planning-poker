@@ -16,8 +16,16 @@
       <div class="context-menu" role="menu">
         <div class="context-menu__title" role="presentation">{{ participant.name }}</div>
         <div class="context-menu__actions">
-          <button type="button" role="menuitem" disabled>Placeholder 1</button>
-          <button type="button" role="menuitem" disabled>Placeholder 2</button>
+          @if (sessionStore.isHost() && participant.id !== sessionStore.selfParticipantId()) {
+            <button
+              type="button"
+              role="menuitem"
+              class="danger"
+              (click)="sessionStore.removeParticipant(participant.id)"
+            >
+              Remove participant
+            </button>
+          }
         </div>
       </div>
     </div>

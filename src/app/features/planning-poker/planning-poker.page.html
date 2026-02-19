@@ -32,25 +32,41 @@
           id="display-name"
           type="text"
           [formControl]="displayNameControl"
+          [readonly]="sessionStore.inRoom()"
           maxlength="32"
           placeholder="Your display name"
         />
 
         @if (!sessionStore.inRoom()) {
-          <label for="room-code">Room code (for Join)</label>
-          <input
-            id="room-code"
-            type="text"
-            [formControl]="roomCodeControl"
-            maxlength="6"
-            placeholder="ABC123"
-          />
+          @if (inviteRoomCode(); as inviteCode) {
+            <div class="invite-room">
+              <span>Room:</span>
+              <strong>{{ inviteCode }}</strong>
+              <button
+                type="button"
+                class="invite-room__clear"
+                aria-label="Cancelar convite"
+                (click)="clearInviteRoom()"
+              >
+                ✕
+              </button>
+            </div>
+          } @else {
+            <label for="room-code">Room code (for Join)</label>
+            <input
+              id="room-code"
+              type="text"
+              [formControl]="roomCodeControl"
+              maxlength="6"
+              placeholder="ABC123"
+            />
+          }
 
           <div class="actions">
             <button
               type="button"
               (click)="createRoom()"
-              [disabled]="displayNameControl.value.trim().length === 0"
+              [disabled]="!canCreateRoom()"
             >
               Create room
             </button>
@@ -69,26 +85,14 @@
       </div>
 
       @if (sessionStore.inRoom()) {
-        <button type="button" class="secondary" (click)="leaveRoom()">Leave room</button>
+        <div class="room-actions">
+          <button type="button" (click)="inviteParticipants()">Invite</button>
+          <button type="button" class="secondary" (click)="leaveRoom()">Leave room</button>
+        </div>
       }
     </section>
   </header>
 
-  @if (!sessionStore.inRoom()) {
-    <form class="add-participant" (submit)="$event.preventDefault(); addParticipant()">
-      <label for="participant-name">Add local participant</label>
-      <div>
-        <input
-          id="participant-name"
-          type="text"
-          [formControl]="participantNameControl"
-          maxlength="32"
-          placeholder="Name"
-        />
-        <button type="submit" [disabled]="participantNameControl.invalid">Add</button>
-      </div>
-    </form>
-  }
 
   <app-session-summary
     [totalParticipants]="sessionStore.totalParticipants()"
@@ -108,7 +112,6 @@
       [activeSelectable]="sessionStore.mode() === 'local'"
       (activeChanged)="sessionStore.setActiveParticipant($event)"
       (participantRemoved)="sessionStore.removeParticipant($event)"
-      (voteCleared)="sessionStore.clearVote($event)"
     />
 
     <section class="table" aria-label="Voting table">
@@ -152,7 +155,10 @@
             ? !sessionStore.myParticipant()
             : !sessionStore.activeParticipant()
         "
+        [showClear]="canShowClear()"
+        [clearDisabled]="isClearDisabled()"
         (cardSelected)="vote($event)"
+        (clearSelected)="clearMyVote()"
       />
     </section>
   </section>

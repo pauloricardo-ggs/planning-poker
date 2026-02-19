@@ -178,10 +178,20 @@ io.on('connection', (socket) => {
     'participant:remove',
     (payload: { participantId: string }, ack?: (response: unknown) => void) => {
       try {
+        const removedRoomCode = roomStore.getRoomCodeForSocket(payload.participantId);
         const snapshot = roomStore.removeParticipant(socket.id, payload.participantId);
         ack?.({ ok: true });
         if (snapshot.participants.length > 0) {
           emitRoomState(snapshot.roomCode);
+        }
+
+        if (removedRoomCode) {
+          const removedSocket = io.sockets.sockets.get(payload.participantId);
+          if (removedSocket) {
+            removedSocket.leave(removedRoomCode);
+            removedSocket.emit('room:kicked');
+            removedSocket.disconnect(true);
+          }
         }
       } catch (error) {
         ack?.({ ok: false, message: getErrorMessage(error) });

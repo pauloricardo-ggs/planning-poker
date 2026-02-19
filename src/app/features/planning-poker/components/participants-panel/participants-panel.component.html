@@ -63,21 +63,6 @@
           </span>
         </button>
 
-        <div class="participant__actions">
-          @if (participant.id === selfParticipantId() || isHost()) {
-            <button
-              type="button"
-              (click)="clearVote(participant.id)"
-              [disabled]="participant.vote === null || revealVotes()"
-            >
-              Clear
-            </button>
-          }
-
-          @if (isHost() && participant.id !== selfParticipantId()) {
-            <button type="button" class="danger" (click)="remove(participant.id)">Remove</button>
-          }
-        </div>
       </li>
     }
   </ul>

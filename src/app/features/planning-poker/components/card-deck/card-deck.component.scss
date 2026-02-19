@@ -36,3 +36,15 @@
   box-shadow: 0 12px 26px -20px color-mix(in oklab, var(--accent-color), transparent 5%);
   color: var(--accent-color);
 }
+
+.card--clear {
+  background: var(--surface-default);
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.card--clear:hover:not(:disabled) {
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+  box-shadow: 0 12px 26px -20px color-mix(in oklab, var(--danger-color), transparent 35%);
+}

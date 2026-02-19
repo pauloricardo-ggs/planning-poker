@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { PlanningSessionStore } from './core/state/planning-session.store';
 import { RealtimeGatewayService } from './core/realtime/realtime-gateway.service';
 
 interface FirecrackerParticle {
@@ -55,6 +56,7 @@ interface ContextParticipant {
 })
 export class App {
   private readonly realtimeGateway = inject(RealtimeGatewayService);
+  readonly sessionStore = inject(PlanningSessionStore);
   private burstId = 0;
   private emoteId = 0;
   private effectId = 0;

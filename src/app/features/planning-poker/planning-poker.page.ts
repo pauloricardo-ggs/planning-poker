@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PlanningCard } from '../../core/models/planning.models';
 import { PlanningSessionStore } from '../../core/state/planning-session.store';
@@ -20,6 +22,8 @@ import { SessionSummaryComponent } from './components/session-summary/session-su
 })
 export class PlanningPokerPageComponent {
   readonly sessionStore = inject(PlanningSessionStore);
+  private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
   private lastCursorEmitAt = 0;
 
   readonly displayNameControl = new FormControl('', {
@@ -37,11 +41,33 @@ export class PlanningPokerPageComponent {
     validators: [Validators.required, Validators.maxLength(32)],
   });
 
-  readonly canCreateRoom = () => this.displayNameControl.value.trim().length > 0;
+  readonly inviteRoomCode = signal<string | null>(null);
+
+  readonly canCreateRoom = () =>
+    this.displayNameControl.value.trim().length > 0 && !this.inviteRoomCode();
 
   readonly canJoinRoom = () =>
     this.displayNameControl.value.trim().length > 0 &&
     this.roomCodeControl.value.trim().length === 6;
+
+  constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const inviteCode = params.get('room');
+      if (!inviteCode) {
+        this.inviteRoomCode.set(null);
+        return;
+      }
+
+      const normalized = inviteCode.trim().toUpperCase();
+      if (normalized.length !== 6) {
+        this.inviteRoomCode.set(null);
+        return;
+      }
+
+      this.inviteRoomCode.set(normalized);
+      this.roomCodeControl.setValue(normalized);
+    });
+  }
 
   async createRoom(): Promise<void> {
     const displayName = this.displayNameControl.value.trim();
@@ -70,21 +96,64 @@ export class PlanningPokerPageComponent {
     await this.sessionStore.leaveRoom();
   }
 
-  addParticipant(): void {
-    if (this.sessionStore.mode() === 'multiplayer') {
+  async inviteParticipants(): Promise<void> {
+    const roomCode = this.sessionStore.roomCode();
+    if (!roomCode) {
       return;
     }
 
-    if (this.participantNameControl.invalid) {
-      return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('room', roomCode);
+    url.hash = '';
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Planning Poker',
+          text: 'Entre na sessão com seu nome:',
+          url: url.toString(),
+        });
+        return;
+      } catch {
+        // Fallback to clipboard
+      }
     }
 
-    this.sessionStore.addParticipant(this.participantNameControl.value);
-    this.participantNameControl.reset('');
+    await navigator.clipboard.writeText(url.toString());
+  }
+
+  clearInviteRoom(): void {
+    this.inviteRoomCode.set(null);
+    this.roomCodeControl.reset('');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('room');
+    url.hash = '';
+    window.history.replaceState({}, '', url.toString());
   }
 
   vote(card: PlanningCard): void {
     this.sessionStore.voteForActiveParticipant(card);
+  }
+
+  canShowClear(): boolean {
+    return this.sessionStore.mode() === 'multiplayer' && !!this.sessionStore.myParticipant();
+  }
+
+  isClearDisabled(): boolean {
+    return (
+      this.sessionStore.revealVotes() ||
+      !this.sessionStore.myParticipant() ||
+      this.sessionStore.myParticipant()?.vote === null
+    );
+  }
+
+  clearMyVote(): void {
+    const myParticipant = this.sessionStore.myParticipant();
+    if (!myParticipant || this.sessionStore.revealVotes()) {
+      return;
+    }
+
+    this.sessionStore.clearVote(myParticipant.id);
   }
 
   onViewportPointerMove(event: PointerEvent): void {

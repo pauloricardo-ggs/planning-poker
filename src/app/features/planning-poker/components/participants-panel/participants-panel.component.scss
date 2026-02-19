@@ -152,27 +152,3 @@
   font-weight: 700;
 }
 
-.participant__actions {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.participant__actions button {
-  border: 1px solid var(--surface-border);
-  border-radius: 0.45rem;
-  background: var(--surface-default);
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.3rem 0.5rem;
-  cursor: pointer;
-}
-
-.participant__actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.participant__actions button.danger {
-  color: var(--danger-color);
-}

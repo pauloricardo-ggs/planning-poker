@@ -242,6 +242,13 @@ export class RealtimeGatewayService {
       this.reconcileRemoteCursors();
     });
 
+    this.socket.on('room:kicked', () => {
+      this.snapshotState.set(null);
+      this.selfIdState.set(null);
+      this.remoteCursorsState.set({});
+      this.errorMessage.set('You were removed from the room.');
+    });
+
     this.socket.on(
       'cursor:update',
       (payload: { participantId: string; x: number; y: number; name: string }) => {

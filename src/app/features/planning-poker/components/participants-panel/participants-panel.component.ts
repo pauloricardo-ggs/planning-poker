@@ -24,7 +24,6 @@ export class ParticipantsPanelComponent {
 
   readonly activeChanged = output<string>();
   readonly participantRemoved = output<string>();
-  readonly voteCleared = output<string>();
 
   activate(participantId: string): void {
     if (!this.activeSelectable()) {
@@ -36,10 +35,6 @@ export class ParticipantsPanelComponent {
 
   remove(participantId: string): void {
     this.participantRemoved.emit(participantId);
-  }
-
-  clearVote(participantId: string): void {
-    this.voteCleared.emit(participantId);
   }
 
   toggleCustomEmotes(participantId: string): void {

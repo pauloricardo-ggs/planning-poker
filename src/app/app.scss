@@ -49,6 +49,13 @@
   cursor: not-allowed;
 }
 
+.context-menu__actions button.danger {
+  border-style: solid;
+  border-color: color-mix(in oklab, var(--danger-color), transparent 40%);
+  color: var(--danger-color);
+  cursor: pointer;
+}
+
 .firecracker-layer {
   position: fixed;
   inset: 0;

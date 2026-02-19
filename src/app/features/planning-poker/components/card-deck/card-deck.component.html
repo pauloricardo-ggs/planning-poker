@@ -10,4 +10,16 @@
       {{ card }}
     </button>
   }
+
+  @if (showClear()) {
+    <button
+      type="button"
+      class="card card--clear"
+      [disabled]="clearDisabled()"
+      (click)="clearSelection()"
+      aria-label="Clear vote"
+    >
+      X
+    </button>
+  }
 </section>
