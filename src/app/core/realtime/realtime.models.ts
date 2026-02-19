@@ -35,6 +35,14 @@ export interface EmotePayload {
   y: number;
 }
 
+export interface CagePeekPayload {
+  at: number;
+}
+
+export interface CinemaPeekPayload {
+  at: number;
+}
+
 export type FunEffectType = 'rock' | 'coffee';
 
 export interface FunEffectPayload {

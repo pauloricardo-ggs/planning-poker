@@ -82,4 +82,32 @@
       </span>
     }
   </div>
+
+  <div class="cage-peek-layer" aria-hidden="true">
+    @for (peek of cagePeeks(); track peek.id) {
+      <div class="cage-peek">
+        <img
+          class="cage-peek__image"
+          [ngSrc]="peek.src"
+          width="160"
+          height="160"
+          alt=""
+        />
+      </div>
+    }
+  </div>
+
+  <div class="cinema-peek-layer" aria-hidden="true">
+    @for (peek of cinemaPeeks(); track peek.id) {
+      <div class="cinema-peek">
+        <img
+          class="cinema-peek__image"
+          ngSrc="/absolute-cinema.png"
+          width="320"
+          height="120"
+          alt=""
+        />
+      </div>
+    }
+  </div>
 </div>

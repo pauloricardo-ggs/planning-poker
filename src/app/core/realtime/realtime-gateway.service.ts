@@ -3,6 +3,8 @@ import { io, Socket } from 'socket.io-client';
 import {
   CreateRoomPayload,
   EmotePayload,
+  CagePeekPayload,
+  CinemaPeekPayload,
   FirecrackerPayload,
   FunEffectPayload,
   FunEffectType,
@@ -25,6 +27,8 @@ export class RealtimeGatewayService {
   private readonly selfIdState = signal<string | null>(null);
   private readonly firecrackerEventState = signal<FirecrackerPayload | null>(null);
   private readonly emoteEventState = signal<EmotePayload | null>(null);
+  private readonly cagePeekEventState = signal<CagePeekPayload | null>(null);
+  private readonly cinemaPeekEventState = signal<CinemaPeekPayload | null>(null);
   private readonly funEffectEventState = signal<FunEffectPayload | null>(null);
 
   readonly connected = signal(false);
@@ -34,6 +38,8 @@ export class RealtimeGatewayService {
   readonly selfId = computed(() => this.selfIdState());
   readonly firecrackerEvent = computed(() => this.firecrackerEventState());
   readonly emoteEvent = computed(() => this.emoteEventState());
+  readonly cagePeekEvent = computed(() => this.cagePeekEventState());
+  readonly cinemaPeekEvent = computed(() => this.cinemaPeekEventState());
   readonly funEffectEvent = computed(() => this.funEffectEventState());
   readonly inRoom = computed(() => this.snapshotState() !== null);
   readonly roomCode = computed(() => this.snapshotState()?.roomCode ?? null);
@@ -113,6 +119,30 @@ export class RealtimeGatewayService {
     }
 
     this.emoteEventState.set(payload);
+  }
+
+  triggerCagePeek(): void {
+    const payload: CagePeekPayload = { at: Date.now() };
+
+    if (this.inRoom()) {
+      const socket = this.ensureSocket();
+      socket.emit('fun:cage', payload);
+      return;
+    }
+
+    this.cagePeekEventState.set(payload);
+  }
+
+  triggerCinemaPeek(): void {
+    const payload: CinemaPeekPayload = { at: Date.now() };
+
+    if (this.inRoom()) {
+      const socket = this.ensureSocket();
+      socket.emit('fun:cinema', payload);
+      return;
+    }
+
+    this.cinemaPeekEventState.set(payload);
   }
 
   triggerFunEffect(
@@ -238,6 +268,14 @@ export class RealtimeGatewayService {
 
     this.socket.on('fun:emote', (payload: EmotePayload) => {
       this.emoteEventState.set(payload);
+    });
+
+    this.socket.on('fun:cage', (payload: CagePeekPayload) => {
+      this.cagePeekEventState.set(payload);
+    });
+
+    this.socket.on('fun:cinema', (payload: CinemaPeekPayload) => {
+      this.cinemaPeekEventState.set(payload);
     });
 
     this.socket.on('fun:effect', (payload: FunEffectPayload) => {

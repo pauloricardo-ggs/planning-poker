@@ -84,6 +84,34 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('fun:cage', (payload: { at: number }) => {
+    try {
+      const roomCode = roomStore.getRoomCodeForSocket(socket.id);
+      if (!roomCode) {
+        return;
+      }
+
+      const at = Number.isFinite(payload.at) ? payload.at : Date.now();
+      io.to(roomCode).emit('fun:cage', { at });
+    } catch {
+      return;
+    }
+  });
+
+  socket.on('fun:cinema', (payload: { at: number }) => {
+    try {
+      const roomCode = roomStore.getRoomCodeForSocket(socket.id);
+      if (!roomCode) {
+        return;
+      }
+
+      const at = Number.isFinite(payload.at) ? payload.at : Date.now();
+      io.to(roomCode).emit('fun:cinema', { at });
+    } catch {
+      return;
+    }
+  });
+
   socket.on('fun:firecracker', (payload: { x: number; y: number }) => {
     try {
       const roomCode = roomStore.getRoomCodeForSocket(socket.id);

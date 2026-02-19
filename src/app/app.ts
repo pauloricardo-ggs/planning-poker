@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { PlanningSessionStore } from './core/state/planning-session.store';
 import { RealtimeGatewayService } from './core/realtime/realtime-gateway.service';
+
+const CAGE_IMAGES = ['/nicolas-cage-1.png', '/nicolas-cage-2.png', '/nicolas-cage-3.png'] as const;
 
 interface FirecrackerParticle {
   id: number;
@@ -36,6 +39,15 @@ interface FunEffectBurst {
   targetY: number;
 }
 
+interface CagePeek {
+  id: number;
+  src: (typeof CAGE_IMAGES)[number];
+}
+
+interface CinemaPeek {
+  id: number;
+}
+
 interface ContextParticipant {
   id: string;
   name: string;
@@ -49,7 +61,7 @@ interface ContextParticipant {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, NgOptimizedImage],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -60,6 +72,8 @@ export class App {
   private burstId = 0;
   private emoteId = 0;
   private effectId = 0;
+  private cageId = 0;
+  private cinemaId = 0;
 
   readonly contextMenuOpen = signal(false);
   readonly contextMenuPosition = signal({ x: 0, y: 0 });
@@ -67,6 +81,8 @@ export class App {
   readonly bursts = signal<FirecrackerBurst[]>([]);
   readonly emoteBursts = signal<EmoteBurst[]>([]);
   readonly funEffectBursts = signal<FunEffectBurst[]>([]);
+  readonly cagePeeks = signal<CagePeek[]>([]);
+  readonly cinemaPeeks = signal<CinemaPeek[]>([]);
 
   constructor() {
     effect(() => {
@@ -108,6 +124,24 @@ export class App {
         Math.round((effectEvent.targetY ?? effectEvent.y) * window.innerHeight),
       );
     });
+
+    effect(() => {
+      const cageEvent = this.realtimeGateway.cagePeekEvent();
+      if (!cageEvent) {
+        return;
+      }
+
+      this.spawnCagePeek();
+    });
+
+    effect(() => {
+      const cinemaEvent = this.realtimeGateway.cinemaPeekEvent();
+      if (!cinemaEvent) {
+        return;
+      }
+
+      this.spawnCinemaPeek();
+    });
   }
 
   onContextMenu(event: MouseEvent): void {
@@ -143,6 +177,20 @@ export class App {
   onWindowKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       this.contextMenuOpen.set(false);
+    }
+
+    if (this.shouldIgnoreKeydown(event)) {
+      return;
+    }
+
+    if (event.shiftKey && event.key.toLowerCase() === 'c') {
+      event.preventDefault();
+      this.realtimeGateway.triggerCagePeek();
+    }
+
+    if (event.shiftKey && event.key.toLowerCase() === 'a') {
+      event.preventDefault();
+      this.realtimeGateway.triggerCinemaPeek();
     }
   }
 
@@ -224,6 +272,55 @@ export class App {
         activeBursts.filter((activeBurst) => activeBurst.id !== burst.id),
       );
     }, 1900);
+  }
+
+  private spawnCagePeek(): void {
+    const peek: CagePeek = {
+      id: ++this.cageId,
+      src: this.randomCageImage(),
+    };
+
+    this.cagePeeks.update((activePeeks) => [...activePeeks, peek]);
+
+    window.setTimeout(() => {
+      this.cagePeeks.update((activePeeks) =>
+        activePeeks.filter((activePeek) => activePeek.id !== peek.id),
+      );
+    }, 3000);
+  }
+
+  private spawnCinemaPeek(): void {
+    const peek: CinemaPeek = {
+      id: ++this.cinemaId,
+    };
+
+    this.cinemaPeeks.update((activePeeks) => [...activePeeks, peek]);
+
+    window.setTimeout(() => {
+      this.cinemaPeeks.update((activePeeks) =>
+        activePeeks.filter((activePeek) => activePeek.id !== peek.id),
+      );
+    }, 3000);
+  }
+
+  private randomCageImage(): (typeof CAGE_IMAGES)[number] {
+    const index = Math.floor(Math.random() * CAGE_IMAGES.length);
+    return CAGE_IMAGES[index] ?? CAGE_IMAGES[0];
+  }
+
+  private shouldIgnoreKeydown(event: KeyboardEvent): boolean {
+    const target = event.target;
+    const element = target instanceof HTMLElement ? target : null;
+    if (!element) {
+      return false;
+    }
+
+    if (element.isContentEditable) {
+      return true;
+    }
+
+    const tagName = element.tagName.toLowerCase();
+    return tagName === 'input' || tagName === 'textarea' || tagName === 'select';
   }
 
   private resolveContextParticipant(event: MouseEvent): ContextParticipant | null {
