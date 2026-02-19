@@ -22,6 +22,8 @@ interface EmoteBurst {
   emoji: string;
   x: number;
   y: number;
+  offsetX: number;
+  offsetY: number;
 }
 
 interface FunEffectBurst {
@@ -33,23 +35,15 @@ interface FunEffectBurst {
   targetY: number;
 }
 
-interface EmoteOption {
-  type: 'emote' | 'firecracker' | 'coffee';
-  emoji: string;
-  label: string;
-}
-
-interface ParticipantMenuOption {
-  type: 'rock';
-  emoji: string;
-  label: string;
-}
-
 interface ContextParticipant {
   id: string;
   name: string;
-  targetX: number;
-  targetY: number;
+  bounds: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  };
 }
 
 @Component({
@@ -66,24 +60,11 @@ export class App {
   private effectId = 0;
 
   readonly contextMenuOpen = signal(false);
-  readonly emoteSubmenuOpen = signal(false);
-  readonly participantSubmenuOpen = signal(false);
   readonly contextMenuPosition = signal({ x: 0, y: 0 });
   readonly contextParticipant = signal<ContextParticipant | null>(null);
   readonly bursts = signal<FirecrackerBurst[]>([]);
   readonly emoteBursts = signal<EmoteBurst[]>([]);
   readonly funEffectBursts = signal<FunEffectBurst[]>([]);
-  readonly emoteOptions: readonly EmoteOption[] = [
-    { type: 'firecracker', emoji: '🎆', label: 'Firecracker burst' },
-    { type: 'emote', emoji: '🎉', label: 'Cheer' },
-    { type: 'emote', emoji: '🔥', label: 'Hype' },
-    { type: 'emote', emoji: '😂', label: 'Laugh' },
-    { type: 'emote', emoji: '👏', label: 'Clap' },
-    { type: 'coffee', emoji: '☕', label: 'Drop coffee' },
-  ];
-  readonly participantMenuOptions: readonly ParticipantMenuOption[] = [
-    { type: 'rock', emoji: '🪨', label: 'Throw a rock' },
-  ];
 
   constructor() {
     effect(() => {
@@ -128,104 +109,39 @@ export class App {
   }
 
   onContextMenu(event: MouseEvent): void {
+    const participant = this.resolveContextParticipant(event);
+    if (!participant) {
+      this.contextMenuOpen.set(false);
+      return;
+    }
+
     event.preventDefault();
 
-    const maxX = Math.max(window.innerWidth - 220, 0);
-    const maxY = Math.max(window.innerHeight - 140, 0);
+    const menuWidth = 300;
+    const menuHeight = 150;
+    const emoteRailHeight = 52;
+    const gap = 12;
+    const minY = emoteRailHeight + gap;
+    const maxX = Math.max(window.innerWidth - menuWidth, 0);
+    const maxY = Math.max(window.innerHeight - menuHeight, minY);
+    const nextX = Math.min(Math.max(event.clientX, 12), maxX);
+    const nextY = Math.min(Math.max(event.clientY, minY), maxY);
 
-    this.contextMenuPosition.set({
-      x: Math.min(event.clientX, maxX),
-      y: Math.min(event.clientY, maxY),
-    });
-
-    this.contextParticipant.set(this.resolveContextParticipant(event));
-    this.emoteSubmenuOpen.set(false);
-    this.participantSubmenuOpen.set(false);
+    this.contextMenuPosition.set({ x: nextX, y: nextY });
+    this.contextParticipant.set(participant);
     this.contextMenuOpen.set(true);
   }
 
   onWindowClick(): void {
     if (this.contextMenuOpen()) {
-      this.emoteSubmenuOpen.set(false);
-      this.participantSubmenuOpen.set(false);
       this.contextMenuOpen.set(false);
     }
   }
 
   onWindowKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
-      this.emoteSubmenuOpen.set(false);
-      this.participantSubmenuOpen.set(false);
       this.contextMenuOpen.set(false);
     }
-  }
-
-  triggerReactionAtMenuPosition(option: EmoteOption): void {
-    const position = this.contextMenuPosition();
-    const viewportWidth = Math.max(window.innerWidth, 1);
-    const viewportHeight = Math.max(window.innerHeight, 1);
-
-    if (option.type === 'firecracker') {
-      this.realtimeGateway.triggerFirecracker(
-        position.x / viewportWidth,
-        position.y / viewportHeight,
-      );
-      return;
-    }
-
-    if (option.type === 'coffee') {
-      this.realtimeGateway.triggerFunEffect(
-        option.type,
-        position.x / viewportWidth,
-        position.y / viewportHeight,
-      );
-      return;
-    }
-
-    this.realtimeGateway.triggerEmote(
-      option.emoji,
-      position.x / viewportWidth,
-      position.y / viewportHeight,
-    );
-  }
-
-  onEmoteMenuEnter(): void {
-    this.emoteSubmenuOpen.set(true);
-  }
-
-  onEmoteMenuLeave(): void {
-    this.emoteSubmenuOpen.set(false);
-  }
-
-  onParticipantMenuEnter(): void {
-    this.participantSubmenuOpen.set(true);
-  }
-
-  onParticipantMenuLeave(): void {
-    this.participantSubmenuOpen.set(false);
-  }
-
-  triggerParticipantAction(option: ParticipantMenuOption): void {
-    const target = this.contextParticipant();
-    if (!target) {
-      return;
-    }
-
-    if (option.type !== 'rock') {
-      return;
-    }
-
-    const viewportWidth = Math.max(window.innerWidth, 1);
-    const viewportHeight = Math.max(window.innerHeight, 1);
-    const start = this.randomStartPoint(viewportWidth, viewportHeight);
-
-    this.realtimeGateway.triggerFunEffect(
-      'rock',
-      start.x / viewportWidth,
-      start.y / viewportHeight,
-      target.targetX / viewportWidth,
-      target.targetY / viewportHeight,
-    );
   }
 
   private spawnFirecracker(x: number, y: number): void {
@@ -259,11 +175,19 @@ export class App {
   }
 
   private spawnEmote(emoji: string, x: number, y: number): void {
+    const viewportWidth = Math.max(window.innerWidth, 1);
+    const viewportHeight = Math.max(window.innerHeight, 1);
+    const start = this.randomOffscreenStart(viewportWidth, viewportHeight);
+    const offsetX = start.x - x;
+    const offsetY = start.y - y;
+
     const burst: EmoteBurst = {
       id: ++this.emoteId,
       emoji,
       x,
       y,
+      offsetX,
+      offsetY,
     };
 
     this.emoteBursts.update((activeBursts) => [...activeBursts, burst]);
@@ -302,11 +226,13 @@ export class App {
 
   private resolveContextParticipant(event: MouseEvent): ContextParticipant | null {
     const target = event.target;
-    if (!(target instanceof HTMLElement)) {
+    const elementTarget =
+      target instanceof HTMLElement ? target : target instanceof Text ? target.parentElement : null;
+    if (!elementTarget) {
       return null;
     }
 
-    const participantNode = target.closest<HTMLElement>(
+    const participantNode = elementTarget.closest<HTMLElement>(
       '[data-participant-id][data-participant-name]',
     );
     if (!participantNode) {
@@ -319,48 +245,60 @@ export class App {
       return null;
     }
 
-    const nameNode =
-      participantNode.querySelector<HTMLElement>('.participant__name') ?? participantNode;
-    const rect = nameNode.getBoundingClientRect();
-    const viewportWidth = Math.max(window.innerWidth, 1);
-    const viewportHeight = Math.max(window.innerHeight, 1);
-
-    const targetX = Math.min(Math.max(rect.left + rect.width / 2, 12), viewportWidth - 12);
-    const targetY = Math.min(Math.max(rect.top + rect.height / 2, 12), viewportHeight - 12);
+    const rect = participantNode.getBoundingClientRect();
 
     return {
       id: participantId,
       name: participantName,
-      targetX,
-      targetY,
+      bounds: {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+      },
     };
   }
 
-  private randomStartPoint(
+  private randomOffscreenStart(
     viewportWidth: number,
     viewportHeight: number,
   ): { x: number; y: number } {
-    const margin = 16;
+    const margin = 80;
     const side = Math.floor(Math.random() * 4);
 
     if (side === 0) {
-      return { x: margin, y: margin + Math.random() * Math.max(viewportHeight - margin * 2, 1) };
+      return {
+        x: this.randomInRange(-margin, viewportWidth + margin),
+        y: -margin - Math.random() * 120,
+      };
     }
 
     if (side === 1) {
       return {
-        x: Math.max(viewportWidth - margin, margin),
-        y: margin + Math.random() * Math.max(viewportHeight - margin * 2, 1),
+        x: viewportWidth + margin + Math.random() * 120,
+        y: this.randomInRange(-margin, viewportHeight + margin),
       };
     }
 
     if (side === 2) {
-      return { x: margin + Math.random() * Math.max(viewportWidth - margin * 2, 1), y: margin };
+      return {
+        x: this.randomInRange(-margin, viewportWidth + margin),
+        y: viewportHeight + margin + Math.random() * 120,
+      };
     }
 
     return {
-      x: margin + Math.random() * Math.max(viewportWidth - margin * 2, 1),
-      y: Math.max(viewportHeight - margin, margin),
+      x: -margin - Math.random() * 120,
+      y: this.randomInRange(-margin, viewportHeight + margin),
     };
   }
+
+  private randomInRange(min: number, max: number): number {
+    if (max <= min) {
+      return min;
+    }
+
+    return min + Math.random() * (max - min);
+  }
+
 }

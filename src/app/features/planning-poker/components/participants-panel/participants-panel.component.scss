@@ -32,6 +32,7 @@
 }
 
 .participant {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
@@ -40,6 +41,87 @@
   border-radius: 0.75rem;
   border: 1px solid transparent;
   padding: 0.5rem;
+}
+
+.participant__emote-rail {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.2rem);
+  transform: translate(-50%, 6px);
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--surface-default), transparent 8%);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 12px 30px -22px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 2;
+}
+
+.participant__emote-rail::after {
+  content: '';
+  position: absolute;
+  left: -0.4rem;
+  right: -0.4rem;
+  top: 100%;
+  height: 0.9rem;
+}
+
+.participant:hover .participant__emote-rail {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.participant__emote {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font-size: 1rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.participant__emote:hover {
+  border-color: var(--surface-border);
+  background: var(--surface-default);
+  transform: translateY(-1px);
+}
+
+.participant__emote--plus {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.participant__emote-picker {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.15rem);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.45rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 20px;
+  background: color-mix(in oklab, var(--surface-default), transparent 8%);
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 16px 36px -24px rgba(0, 0, 0, 0.75);
+}
+
+.participant__emote-picker::after {
+  content: '';
+  position: absolute;
+  left: -0.4rem;
+  right: -0.4rem;
+  top: 100%;
+  height: 0.7rem;
 }
 
 .participant--active {

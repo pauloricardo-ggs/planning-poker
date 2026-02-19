@@ -6,55 +6,20 @@
 >
   <router-outlet />
 
-  @if (contextMenuOpen()) {
+  @if (contextMenuOpen() && contextParticipant(); as participant) {
     <div
-      class="context-menu"
-      role="menu"
+      class="context-menu-container"
       [style.left.px]="contextMenuPosition().x"
       [style.top.px]="contextMenuPosition().y"
       (click)="$event.stopPropagation()"
     >
-      <div
-        class="menu-row"
-        [class.menu-row--open]="emoteSubmenuOpen()"
-        (mouseenter)="onEmoteMenuEnter()"
-        (mouseleave)="onEmoteMenuLeave()"
-      >
-        <button type="button" role="menuitem">Emote <span aria-hidden="true">›</span></button>
-
-        @if (emoteSubmenuOpen()) {
-          <div class="context-submenu" role="menu" (click)="$event.stopPropagation()">
-            @for (option of emoteOptions; track option.label) {
-              <button type="button" role="menuitem" (click)="triggerReactionAtMenuPosition(option)">
-                {{ option.emoji }} {{ option.label }}
-              </button>
-            }
-          </div>
-        }
-      </div>
-
-      @if (contextParticipant(); as participant) {
-        <div
-          class="menu-row"
-          [class.menu-row--open]="participantSubmenuOpen()"
-          (mouseenter)="onParticipantMenuEnter()"
-          (mouseleave)="onParticipantMenuLeave()"
-        >
-          <button type="button" role="menuitem">
-            {{ participant.name }} <span aria-hidden="true">›</span>
-          </button>
-
-          @if (participantSubmenuOpen()) {
-            <div class="context-submenu" role="menu" (click)="$event.stopPropagation()">
-              @for (option of participantMenuOptions; track option.label) {
-                <button type="button" role="menuitem" (click)="triggerParticipantAction(option)">
-                  {{ option.emoji }} {{ option.label }}
-                </button>
-              }
-            </div>
-          }
+      <div class="context-menu" role="menu">
+        <div class="context-menu__title" role="presentation">{{ participant.name }}</div>
+        <div class="context-menu__actions">
+          <button type="button" role="menuitem" disabled>Placeholder 1</button>
+          <button type="button" role="menuitem" disabled>Placeholder 2</button>
         </div>
-      }
+      </div>
     </div>
   }
 
@@ -76,8 +41,14 @@
 
   <div class="emote-layer" aria-hidden="true">
     @for (emote of emoteBursts(); track emote.id) {
-      <span class="emote-burst" [style.left.px]="emote.x" [style.top.px]="emote.y">
-        {{ emote.emoji }}
+      <span
+        class="emote-burst"
+        [style.left.px]="emote.x"
+        [style.top.px]="emote.y"
+        [style.--emote-offset-x.px]="emote.offsetX"
+        [style.--emote-offset-y.px]="emote.offsetY"
+      >
+        <span class="emote-burst__icon">{{ emote.emoji }}</span>
       </span>
     }
   </div>

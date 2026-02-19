@@ -11,7 +11,45 @@
         [attr.data-participant-id]="participant.id"
         [attr.data-participant-name]="participant.name"
         [class.participant--active]="participant.id === activeParticipantId()"
+        #participantItem
+        (mouseleave)="closeCustomEmotes(participant.id)"
       >
+        <div class="participant__emote-rail" role="group" aria-label="Emotes">
+          @for (emote of quickEmotes; track emote) {
+            <button
+              type="button"
+              class="participant__emote"
+              (click)="triggerEmote(emote, participantItem)"
+              [attr.aria-label]="'Enviar emote ' + emote"
+            >
+              {{ emote }}
+            </button>
+          }
+          <button
+            type="button"
+            class="participant__emote participant__emote--plus"
+            aria-label="Mais emotes"
+            (click)="toggleCustomEmotes(participant.id)"
+          >
+            {{ customEmoteOpenId() === participant.id ? '✕' : '＋' }}
+          </button>
+          @if (customEmoteOpenId() === participant.id) {
+            <div class="participant__emote-picker" role="menu" (click)="$event.stopPropagation()">
+              @for (emote of customEmotes; track emote) {
+                <button
+                  type="button"
+                  class="participant__emote"
+                  role="menuitem"
+                  (click)="triggerEmote(emote, participantItem)"
+                  [attr.aria-label]="'Enviar emote ' + emote"
+                >
+                  {{ emote }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+
         <button type="button" class="participant__identity" (click)="activate(participant.id)">
           <span class="participant__name">{{ participant.name }}</span>
           <span class="participant__vote">
