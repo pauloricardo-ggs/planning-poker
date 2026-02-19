@@ -32,7 +32,6 @@ export class PlanningSessionStore {
   readonly connected = computed(() => this.realtimeGateway.connected());
   readonly connectionError = computed(() => this.realtimeGateway.errorMessage());
   readonly selfParticipantId = computed(() => this.realtimeGateway.selfId());
-  readonly remoteCursors = computed(() => this.realtimeGateway.remoteCursors());
 
   readonly activeParticipant = computed(() => {
     const participantId = this.activeParticipantId();
@@ -108,14 +107,6 @@ export class PlanningSessionStore {
 
   async leaveRoom(): Promise<void> {
     await this.realtimeGateway.leaveRoom();
-  }
-
-  publishCursorMove(x: number, y: number): void {
-    if (this.mode() !== 'multiplayer') {
-      return;
-    }
-
-    this.realtimeGateway.publishCursorMove(x, y);
   }
 
   addParticipant(rawName: string): void {

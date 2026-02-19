@@ -24,7 +24,6 @@ export class PlanningPokerPageComponent {
   readonly sessionStore = inject(PlanningSessionStore);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
-  private lastCursorEmitAt = 0;
 
   readonly displayNameControl = new FormControl('', {
     nonNullable: true,
@@ -156,26 +155,4 @@ export class PlanningPokerPageComponent {
     this.sessionStore.clearVote(myParticipant.id);
   }
 
-  onViewportPointerMove(event: PointerEvent): void {
-    if (!this.sessionStore.inRoom() || this.sessionStore.mode() !== 'multiplayer') {
-      return;
-    }
-
-    const now = performance.now();
-    if (now - this.lastCursorEmitAt < 45) {
-      return;
-    }
-
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    if (viewportWidth <= 0 || viewportHeight <= 0) {
-      return;
-    }
-
-    const x = Math.min(Math.max(event.clientX / viewportWidth, 0), 1);
-    const y = Math.min(Math.max(event.clientY / viewportHeight, 0), 1);
-
-    this.lastCursorEmitAt = now;
-    this.sessionStore.publishCursorMove(x, y);
-  }
 }

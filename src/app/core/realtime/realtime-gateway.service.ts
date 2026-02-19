@@ -2,14 +2,12 @@ import { computed, Injectable, signal } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import {
   CreateRoomPayload,
-  CursorMovePayload,
   EmotePayload,
   FirecrackerPayload,
   FunEffectPayload,
   FunEffectType,
   JoinRoomPayload,
   ParticipantActionPayload,
-  RemoteCursor,
   RoomSnapshot,
   SocketAck,
   VotePayload,
@@ -25,7 +23,6 @@ export class RealtimeGatewayService {
 
   private readonly snapshotState = signal<RoomSnapshot | null>(null);
   private readonly selfIdState = signal<string | null>(null);
-  private readonly remoteCursorsState = signal<Record<string, RemoteCursor>>({});
   private readonly firecrackerEventState = signal<FirecrackerPayload | null>(null);
   private readonly emoteEventState = signal<EmotePayload | null>(null);
   private readonly funEffectEventState = signal<FunEffectPayload | null>(null);
@@ -35,7 +32,6 @@ export class RealtimeGatewayService {
 
   readonly snapshot = computed(() => this.snapshotState());
   readonly selfId = computed(() => this.selfIdState());
-  readonly remoteCursors = computed(() => Object.values(this.remoteCursorsState()));
   readonly firecrackerEvent = computed(() => this.firecrackerEventState());
   readonly emoteEvent = computed(() => this.emoteEventState());
   readonly funEffectEvent = computed(() => this.funEffectEventState());
@@ -85,17 +81,7 @@ export class RealtimeGatewayService {
     await this.emitWithAck<SocketAck>('room:leave', undefined);
     this.snapshotState.set(null);
     this.selfIdState.set(null);
-    this.remoteCursorsState.set({});
     this.errorMessage.set(null);
-  }
-
-  publishCursorMove(x: number, y: number): void {
-    if (!this.inRoom()) {
-      return;
-    }
-
-    const socket = this.ensureSocket();
-    socket.emit('cursor:move', { x, y } satisfies CursorMovePayload);
   }
 
   triggerFirecracker(x: number, y: number): void {
@@ -229,7 +215,6 @@ export class RealtimeGatewayService {
 
     this.socket.on('disconnect', () => {
       this.connected.set(false);
-      this.remoteCursorsState.set({});
     });
 
     this.socket.on('connect_error', () => {
@@ -239,41 +224,12 @@ export class RealtimeGatewayService {
 
     this.socket.on('room:state', (snapshot: RoomSnapshot) => {
       this.snapshotState.set(snapshot);
-      this.reconcileRemoteCursors();
     });
 
     this.socket.on('room:kicked', () => {
       this.snapshotState.set(null);
       this.selfIdState.set(null);
-      this.remoteCursorsState.set({});
       this.errorMessage.set('You were removed from the room.');
-    });
-
-    this.socket.on(
-      'cursor:update',
-      (payload: { participantId: string; x: number; y: number; name: string }) => {
-        const selfId = this.selfIdState();
-        if (!this.inRoom() || payload.participantId === selfId) {
-          return;
-        }
-
-        this.remoteCursorsState.update((cursors) => ({
-          ...cursors,
-          [payload.participantId]: {
-            participantId: payload.participantId,
-            name: payload.name,
-            x: payload.x,
-            y: payload.y,
-          },
-        }));
-      },
-    );
-
-    this.socket.on('cursor:leave', (payload: { participantId: string }) => {
-      this.remoteCursorsState.update((cursors) => {
-        const { [payload.participantId]: _removed, ...remaining } = cursors;
-        return remaining;
-      });
     });
 
     this.socket.on('fun:firecracker', (payload: FirecrackerPayload) => {
@@ -311,39 +267,4 @@ export class RealtimeGatewayService {
     });
   }
 
-  private reconcileRemoteCursors(): void {
-    const snapshot = this.snapshotState();
-    const selfId = this.selfIdState();
-
-    if (!snapshot || !selfId) {
-      this.remoteCursorsState.set({});
-      return;
-    }
-
-    const participantMap = new Map(
-      snapshot.participants.map((participant) => [participant.id, participant.name]),
-    );
-
-    this.remoteCursorsState.update((cursors) => {
-      const nextCursors: Record<string, RemoteCursor> = {};
-
-      for (const [participantId, cursor] of Object.entries(cursors)) {
-        if (participantId === selfId) {
-          continue;
-        }
-
-        const name = participantMap.get(participantId);
-        if (!name) {
-          continue;
-        }
-
-        nextCursors[participantId] = {
-          ...cursor,
-          name,
-        };
-      }
-
-      return nextCursors;
-    });
-  }
 }

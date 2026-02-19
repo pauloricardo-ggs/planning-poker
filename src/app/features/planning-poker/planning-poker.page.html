@@ -1,4 +1,4 @@
-<main class="page" (window:pointermove)="onViewportPointerMove($event)">
+<main class="page">
   <header class="page__header">
     <div>
       <p class="eyebrow">ma9 Poker</p>
@@ -163,14 +163,4 @@
     </section>
   </section>
 
-  @if (sessionStore.inRoom()) {
-    <div class="cursor-layer" aria-hidden="true">
-      @for (cursor of sessionStore.remoteCursors(); track cursor.participantId) {
-        <div class="cursor" [style.left.%]="cursor.x * 100" [style.top.%]="cursor.y * 100">
-          <span class="cursor__dot"></span>
-          <span class="cursor__name">{{ cursor.name }}</span>
-        </div>
-      }
-    </div>
-  }
 </main>

@@ -24,18 +24,6 @@ export interface ParticipantActionPayload {
   participantId: string;
 }
 
-export interface CursorMovePayload {
-  x: number;
-  y: number;
-}
-
-export interface RemoteCursor {
-  participantId: string;
-  name: string;
-  x: number;
-  y: number;
-}
-
 export interface FirecrackerPayload {
   x: number;
   y: number;
