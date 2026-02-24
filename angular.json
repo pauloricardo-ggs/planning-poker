@@ -59,6 +59,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "allowedHosts": ["localhost", "host.docker.internal", "planningpoker.grupoma9.com.br"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "planning-poker:build:production"
