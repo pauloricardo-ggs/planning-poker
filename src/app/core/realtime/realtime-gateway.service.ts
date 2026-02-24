@@ -233,7 +233,11 @@ export class RealtimeGatewayService {
       return this.socket;
     }
 
-    this.socket = io('http://localhost:3333', {
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
+    const realtimeUrl = `${protocol}//${hostname}:3333`;
+
+    this.socket = io(realtimeUrl, {
       autoConnect: true,
       transports: ['websocket'],
     });
