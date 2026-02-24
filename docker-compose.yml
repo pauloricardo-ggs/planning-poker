@@ -5,13 +5,7 @@ services:
       network: host
       dockerfile: Dockerfile
     ports:
-      - "82:4200"
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-    volumes:
-      - .:/app
-      - /app/node_modules
+      - "82:80"
     depends_on:
       - server
 
