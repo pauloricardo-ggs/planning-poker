@@ -235,7 +235,10 @@ export class RealtimeGatewayService {
 
     const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
     const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
-    const realtimeUrl = `${protocol}//server.${hostname}`;
+    const host = typeof window !== 'undefined' ? window.location.host : 'localhost:3333';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const realtimeHost = isLocalhost ? `${hostname}:3333` : host;
+    const realtimeUrl = `${protocol}//${realtimeHost}`;
 
     this.socket = io(realtimeUrl, {
       autoConnect: true,
