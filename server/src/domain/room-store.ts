@@ -14,6 +14,8 @@ export class RoomStore {
   private readonly roomBySocketId = new Map<string, string>();
 
   createRoom(socketId: string, rawName: string): RoomSnapshot {
+    this.detachSocketFromExistingRooms(socketId);
+
     const name = normalizeName(rawName);
     if (!name) {
       throw new Error('Participant name is required.');
@@ -57,8 +59,11 @@ export class RoomStore {
     }
 
     if (room.participants.has(socketId)) {
+      this.roomBySocketId.set(socketId, roomCode);
       return this.getSnapshot(roomCode);
     }
+
+    this.detachSocketFromExistingRooms(socketId);
 
     room.participants.set(socketId, {
       id: socketId,
@@ -217,5 +222,40 @@ export class RoomStore {
     }
 
     return room;
+  }
+
+  private detachSocketFromExistingRooms(socketId: string): void {
+    const mappedRoomCode = this.roomBySocketId.get(socketId);
+    if (mappedRoomCode) {
+      this.removeSocketFromRoom(mappedRoomCode, socketId);
+    }
+
+    for (const [roomCode, room] of this.roomsByCode) {
+      if (!room.participants.has(socketId)) {
+        continue;
+      }
+
+      this.removeSocketFromRoom(roomCode, socketId);
+    }
+
+    this.roomBySocketId.delete(socketId);
+  }
+
+  private removeSocketFromRoom(roomCode: string, socketId: string): void {
+    const room = this.roomsByCode.get(roomCode);
+    if (!room) {
+      return;
+    }
+
+    room.participants.delete(socketId);
+
+    if (room.participants.size === 0) {
+      this.roomsByCode.delete(roomCode);
+      return;
+    }
+
+    if (room.hostId === socketId) {
+      room.hostId = room.participants.keys().next().value as string;
+    }
   }
 }
