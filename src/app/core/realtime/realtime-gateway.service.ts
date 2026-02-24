@@ -256,7 +256,7 @@ export class RealtimeGatewayService {
 
     this.socket.on('connect_error', () => {
       this.connected.set(false);
-      this.errorMessage.set('Cannot connect to realtime server on port 3333.');
+      this.errorMessage.set(`Cannot connect to realtime server at ${realtimeUrl}.`);
     });
 
     this.socket.on('room:state', (snapshot: RoomSnapshot) => {
