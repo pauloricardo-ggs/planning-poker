@@ -60,7 +60,7 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "allowedHosts": ["localhost", "host.docker.internal", "planningpoker.grupoma9.com.br"]
+            "allowedHosts": ["localhost", "host.docker.internal", "planningpoker.pauloricardo.dev"]
           },
           "configurations": {
             "production": {
